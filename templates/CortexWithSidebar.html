@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cortex Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --text: #c9d1d9;
+      --accent: #58a6ff;
+      --input-bg: #161b22;
+      --input-text: #ffffff;
+    }
+
+    body.light {
+      --bg: #f9f9f9;
+      --text: #111;
+      --accent: #3276db;
+      --input-bg: #ffffff;
+      --input-text: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 12px 20px;
+      background-color: var(--input-bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #444;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    .header .btns button {
+      margin-left: 10px;
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .header .btns button:hover {
+      background-color: var(--accent);
+      color: #fff;
+    }
+
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 230px;
+      background-color: var(--input-bg);
+      padding: 15px;
+      border-right: 1px solid #444;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+
+    .sidebar button {
+      background-color: #444;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .sidebar button:hover {
+      background-color: #555;
+    }
+
+    .recent-chats {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .recent-chat-item {
+      background-color: #2a2a2a;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .recent-chat-item:hover {
+      background-color: #3a3a3a;
+    }
+
+    .chat-container {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .message.assistant {
+      justify-content: flex-start;
+    }
+
+    .avatar {
+      background-color: var(--accent);
+      color: white;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .message div:last-child {
+      background-color: var(--input-bg);
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 60%;
+      white-space: pre-wrap;
+    }
+
+    .typing {
+      font-style: italic;
+      color: #aaa;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0.6; }
+    }
+
+    .input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #444;
+      background-color: var(--input-bg);
+    }
+
+    #commandInput {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      border: 1px solid #555;
+      border-radius: 10px;
+      margin-right: 10px;
+    }
+
+    button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #1a73e8;
+    }
+
+    #introMessage {
+      text-align: center;
+      color: #999;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🤖 Cortex Chat</h1>
+    <div class="btns">
+      <button onclick="startNewChat()">➕ New Chat</button>
+      <button onclick="clearChat()">🗑️ Clear</button>
+      <button onclick="toggleTheme()">🌗 Toggle</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="sidebar">
+      <h2>🗂️ Chats</h2>
+      <div class="recent-chats" id="recentChats"></div>
+    </div>
+
+    <div class="chat-container" id="chatContainer"></div>
+  </div>
+
+  <div id="introMessage" class="intro-message">🧠 How can I help you?</div>
+
+  <div class="input-area">
+    <input type="text" id="commandInput" placeholder="Type your message..." onkeydown="if(event.key==='Enter') sendCommand()">
+    <button onclick="sendCommand()">Send</button>
+  </div>
+
+  <script>
+    const chatContainer = document.getElementById("chatContainer");
+    const introMessage = document.getElementById("introMessage");
+    const recentChatsEl = document.getElementById("recentChats");
+    let currentChatId = null;
+
+    let savedConversations = JSON.parse(localStorage.getItem("savedConversations") || "[]");
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") document.body.classList.add("light");
+
+      if (savedConversations.length > 0) {
+        loadChat(savedConversations[savedConversations.length - 1].id);
+      } else {
+        introMessage.style.display = "block";
+      }
+
+      updateRecentChats();
+    };
+
+    function addMessage(role, text, isTyping = false) {
+      introMessage.style.display = "none";
+
+      const msg = document.createElement("div");
+      msg.className = `message ${role}`;
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.innerText = role === "user" ? "👤" : "🧠";
+
+      const content = document.createElement("div");
+      content.innerText = text;
+      if (isTyping) content.classList.add("typing");
+
+      msg.appendChild(avatar);
+      msg.appendChild(content);
+      chatContainer.appendChild(msg);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      saveChat();
+      return msg;
+    }
+
+    async function sendCommand() {
+      const input = document.getElementById("commandInput");
+      const userCommand = input.value.trim();
+      if (!userCommand) return;
+
+      introMessage.style.display = "none";
+      addMessage("user", userCommand);
+      input.value = "";
+
+      const typingMsg = addMessage("assistant", "Cortex is typing...", true);
+
+      // Simulated delay + fake response
+      setTimeout(() => {
+        typingMsg.querySelector("div:last-child").classList.remove("typing");
+        typingMsg.querySelector("div:last-child").innerText = `You said: "${userCommand}"`;
+
+        const chat = savedConversations.find(c => c.id === currentChatId);
+        if (chat && !chat.name) {
+          chat.name = userCommand.slice(0, 30) + (userCommand.length > 30 ? "..." : "");
+          updateRecentChats();
+        }
+        saveChat();
+      }, 1000);
+    }
+
+    function startNewChat() {
+      if (chatContainer.innerHTML.trim()) saveChat();
+
+      const id = "chat_" + Date.now();
+      currentChatId = id;
+      chatContainer.innerHTML = "";
+      introMessage.style.display = "block";
+
+      savedConversations.push({ id, html: "", name: "" });
+      localStorage.setItem("savedConversations", JSON.stringify(savedConversations));
+      updateRecentChats();
+    }
+
+    function loadChat(id) {
+      const chat = savedConversations.find(c => c.id === id);
+      if (chat) {
+        chatContainer.innerHTML = chat.html || "";
+        introMessage.style.display = chat.html ? "none" : "block";
+        currentChatId = id;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        saveChat();
+      }
+    }
+
+    function saveChat() {
+      const chat = savedConversations.find(c => c.id === currentChatId);
+      if (chat) {
+        chat.html = chatContainer.innerHTML;
+        localStorage.setItem("savedConversations", JSON.stringify(savedConversations));
+      }
+    }
+
+    function updateRecentChats() {
+      recentChatsEl.innerHTML = "";
+      savedConversations.slice().reverse().forEach(chat => {
+        const item = document.createElement("div");
+        item.className = "recent-chat-item";
+        item.textContent = chat.name || "Unnamed chat";
+        item.onclick = () => loadChat(chat.id);
+        recentChatsEl.appendChild(item);
+      });
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+    }
+
+    function clearChat() {
+      chatContainer.innerHTML = "";
+      introMessage.style.display = "block";
+      const chat = savedConversations.find(c => c.id === currentChatId);
+      if (chat) {
+        chat.html = "";
+        localStorage.setItem("savedConversations", JSON.stringify(savedConversations));
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cortex Assistant</title>
+  <meta name="theme-color" content="#111111">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0e0e0e;
+      --text: #ffffffd1;
+      --input-bg: #1f1f1f;
+      --user-bg: #2a2a2a;
+      --assistant-bg: #1f1f1f;
+      --accent: #ffffffa1;
+    }
+
+    body.light {
+      --bg: #ffffffbd;
+      --text: #222;
+      --input-bg: #eeeeeeab;
+      --user-bg: #d6f0ffb7;
+      --assistant-bg: #f1f1f19f;
+      --accent: #333;
+    }
+
+    body {
+      background-color: var(--bg);
+      font-family: 'Segoe UI', sans-serif;
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    header {
+      background: linear-gradient(90deg, #1e1e1e, #111111);
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      color: #f5f5f582;
+    }
+
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 15px;
+      margin-left: 25%;
+      margin-right: 25%;
+      gap: 15px;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      word-wrap: break-word;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .user {
+      align-self: flex-end;
+      background-color: var(--user-bg);
+      border-bottom-right-radius: 4px;
+      flex-direction: row-reverse;
+    }
+
+    .assistant {
+      align-self: flex-start;
+      background-color: var(--assistant-bg);
+      border-bottom-left-radius: 4px;
+    }
+
+    .avatar {
+      font-size: 20px;
+      padding-top: 2px;
+    }
+
+    .input-container {
+      display: flex;
+      position: relative;
+      padding: 15px;
+      margin-left: 25%;
+      margin-right: 25%;
+      background-color: var(--bg);
+      /* box-shadow: 0 -2px 5px rgba(0,0,0,0.4); */
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .input-container input {
+      flex: 1;
+      min-width: 200px;
+      padding: 12px 50px 12px 20px;
+      font-size: 15px;
+      border: none;
+      border-radius: 30px;
+      background-color: var(--input-bg);
+      color: var(--text);
+    }
+
+    .input-container button {
+      position: absolute;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px;
+    }
+
+    .controls button {
+      padding: 6px 14px;
+      background-color: #333;
+      border: none;
+      border-radius: 20px;
+      color: #eee;
+      cursor: pointer;
+      font-size: 13px;
+      transition: 0.2s ease;
+    }
+
+    .typing {
+      font-style: italic;
+      opacity: 0.7;
+      animation: blink 1s infinite;
+    }
+
+    .placeholder-message {
+      text-align: center;
+      margin-bottom: 130px;
+      color: #888;
+      font-size: 21px;
+    }
+
+    .chat-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px;
+      padding: 10px;
+      background: #181818e0;
+      border-radius: 10px;
+      align-self: flex-start;
+    }
+
+    .chat-item {
+      display: flex;
+      justify-content: space-between;
+      background: #22222200;
+      color: #eee;
+      /* margin-bottom: 6px; */
+      border-radius: 6px;
+      /* padding: 5px 10px; */
+      align-items: center;
+    }
+
+    .chat-item span {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .chat-item button {
+      background: none;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧠 CortexAi Assistant</h1>
+  </header>
+
+  <div class="chat-list" id="chatList"></div>
+
+  <div class="chat-container" id="chatContainer"></div>
+
+  <div class="placeholder-message" id="placeholderMessage">👋 How can I help you?</div>
+
+  <div class="input-container">
+    <input type="text" id="commandInput" placeholder="Ask anything..." onkeydown="if(event.key==='Enter') sendCommand()" />
+    <button onclick="sendCommand()">➤</button>
+  </div>
+
+  <div class="controls">
+    <button onclick="toggleTheme()">🌗 Toggle Theme</button>
+    <button onclick="clearChat()">🗑️ Clear Chat</button>
+    <button onclick="saveChatSession()">💾 Save Chat</button>
+  </div>
+
+  <script>
+    const chatContainer = document.getElementById("chatContainer");
+    const placeholderMessage = document.getElementById("placeholderMessage");
+    const chatList = document.getElementById("chatList");
+    let currentSession = "default";
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+    }
+
+    function updatePlaceholder() {
+      placeholderMessage.style.display = chatContainer.innerHTML.trim() ? "none" : "block";
+    }
+
+    function addMessage(role, text, isTyping = false) {
+      const msg = document.createElement("div");
+      msg.className = `message ${role}`;
+      
+
+      const content = document.createElement("div");
+      content.innerText = text;
+      if (isTyping) content.classList.add("typing");
+
+      
+      msg.appendChild(content);
+      chatContainer.appendChild(msg);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      saveChat();
+      updatePlaceholder();
+      return msg;
+    }
+
+    async function sendCommand() {
+      const input = document.getElementById("commandInput");
+      const userCommand = input.value.trim();
+      if (!userCommand) return;
+
+      addMessage("user", userCommand);
+      input.value = "";
+      const typingMsg = addMessage("assistant", "Cortex is typing...", true);
+
+      try {
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command: userCommand })
+        });
+        const data = await res.json();
+        typingMsg.querySelector(".typing").classList.remove("typing");
+        typingMsg.querySelector("div:last-child").innerText = data.response || "No response.";
+      } catch (e) {
+        typingMsg.querySelector(".typing").classList.remove("typing");
+        typingMsg.querySelector("div:last-child").innerText = "❌ Network error.";
+      }
+
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      saveChat();
+    }
+
+    function clearChat() {
+      chatContainer.innerHTML = "";
+      updatePlaceholder();
+      saveChat();
+    }
+
+    function saveChat() {
+      localStorage.setItem("chat_" + currentSession, chatContainer.innerHTML);
+      updateChatList();
+    }
+
+    function loadChat(name) {
+      currentSession = name;
+      chatContainer.innerHTML = localStorage.getItem("chat_" + name) || "";
+      updatePlaceholder();
+    }
+
+    function saveChatSession() {
+      const name = prompt("Enter chat name:");
+      if (name) {
+        localStorage.setItem("chat_" + name, chatContainer.innerHTML);
+        currentSession = name;
+        updateChatList();
+      }
+    }
+
+    function deleteChat(name) {
+      if (confirm("Delete chat: " + name + "?")) {
+        localStorage.removeItem("chat_" + name);
+        if (name === currentSession) {
+          currentSession = "default";
+          loadChat("default");
+        }
+        updateChatList();
+      }
+    }
+
+    function renameChat(name) {
+      const newName = prompt("Rename chat to:", name);
+      if (newName && newName !== name) {
+        const data = localStorage.getItem("chat_" + name);
+        localStorage.removeItem("chat_" + name);
+        localStorage.setItem("chat_" + newName, data);
+        if (currentSession === name) currentSession = newName;
+        updateChatList();
+      }
+    }
+
+    function updateChatList() {
+      chatList.innerHTML = "";
+      Object.keys(localStorage).filter(k => k.startsWith("chat_")).forEach(k => {
+        const name = k.replace("chat_", "");
+        const div = document.createElement("div");
+        div.className = "chat-item";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.innerText = name;
+        nameSpan.onclick = () => loadChat(name);
+
+        const renameBtn = document.createElement("button");
+        renameBtn.innerText = "✏️";
+        renameBtn.onclick = () => renameChat(name);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.innerText = "🗑️";
+        deleteBtn.onclick = () => deleteChat(name);
+
+        div.appendChild(nameSpan);
+        div.appendChild(renameBtn);
+        div.appendChild(deleteBtn);
+        chatList.appendChild(div);
+      });
+    }
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") document.body.classList.add("light");
+      loadChat("default");
+      updateChatList();
+    };
+  </script>
+</body>
+</html>
