@@ -58,6 +58,7 @@ pyperclip==1.9.0
 PyRect==0.2.0
 PyScreeze==1.0.1
 python-dateutil==2.9.0.post0
+python-dotenv==1.1.1
 python-multipart==0.0.20
 pyttsx3==2.98
 pytweening==1.2.0
