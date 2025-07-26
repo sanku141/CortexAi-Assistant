@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: flask-app
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn cortex_web:app
+    plan: free
