@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-import pyttsx3
+# import pyttsx3
 import datetime
 import random
 import webbrowser
@@ -16,14 +16,14 @@ if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY is not set in environment variables.")
 
 # Initialize Text-to-Speech engine
-engine = pyttsx3.init()
-engine.setProperty("rate", 160)
-engine.setProperty("volume", 1.0)
+# engine = pyttsx3.init()
+# engine.setProperty("rate", 160)
+# engine.setProperty("volume", 1.0)
 
-def speak(text):
-    print("Cortex:", text)
-    engine.say(text)
-    engine.runAndWait()
+# def speak(text):
+#     print("Cortex:", text)
+#     engine.say(text)
+#     engine.runAndWait()
 
 def aiProcess(command):
     client = OpenAI(api_key=OPENAI_API_KEY)
