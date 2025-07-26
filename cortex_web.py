@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from cortex_core import cortexActive, speak
+from cortex_core import cortexActive
 
 app = Flask(__name__, static_url_path='/static', static_folder='static', template_folder='templates')
 CORS(app)
